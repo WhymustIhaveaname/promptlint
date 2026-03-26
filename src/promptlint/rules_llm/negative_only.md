@@ -4,21 +4,25 @@ rule_id: negative_only
 
 # negative_only — 只有否定没有正向替代
 
-Detect imperative instructions that prohibit a behavior without giving the model any positive alternative to follow instead. The model needs to know what to do, not just what to avoid.
+Detect isolated imperative instructions that prohibit a core behavior without giving ANY positive alternative anywhere in the prompt. Only flag when the prohibition is a standalone top-level output instruction and the model would be left with no idea what to do instead.
 
-Only flag when:
-- The instruction is a direct command to the model (e.g., "Don't do X", "Never do Y")
-- There is no positive alternative anywhere nearby in the prompt
+Only flag when ALL of these are true:
+- The instruction directly controls the model's output behavior (format, content, style)
+- There is no positive alternative ANYWHERE nearby in the prompt (not just the same sentence)
+- Removing the prohibition would leave the model with no guidance
 
 Do NOT flag:
-- Lists of situations/conditions where something should NOT be used (e.g., "Don't parallelize when: shared state, debugging") — these are decision criteria, not behavior prohibitions
-- Negative instructions that are immediately followed by a positive alternative in the same paragraph or list
-- Constraints in examples or quoted text
+- Guardrail lists / "Never do X" constraint sections — these define boundaries and the model knows the default (do nothing)
+- Decision criteria ("Don't parallelize when...")
+- Safety constraints ("Never force-push", "Don't skip reviews")
+- Process rules that tell the model what NOT to do in a workflow — the workflow itself is the positive guidance
+- Negative instructions followed by a positive alternative anywhere in the same section
 
 ## Examples
 
-❌ "Do not use markdown formatting" (alone, no alternative) → should say "Write as prose paragraphs"
-❌ "Don't make up information" (alone) → should say "Only answer based on provided documents"
-✅ "Don't parallelize when you need to understand full system state" — decision criterion, not a behavior command
-✅ "Don't use markdown. Write as flowing prose instead." — has positive alternative
-✅ "Never use bullet points. Present information in complete sentences." — has alternative
+❌ "Do not use markdown formatting" (alone, no alternative anywhere) → should say "Write as prose paragraphs"
+❌ "Don't make up information" (entire prompt gives no sourcing guidance) → should say "Only answer based on provided documents"
+✅ "Never force-push without explicit request" — safety guardrail, no alternative needed
+✅ "Don't skip reviews" — process constraint within a workflow
+✅ "Don't dispatch multiple agents in parallel" — boundary rule, default is sequential
+✅ A "Never" list defining project guardrails — these are constraints, not output instructions

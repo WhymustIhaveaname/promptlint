@@ -16,6 +16,55 @@ Lint and test LLM prompts — like pylint + pytest, but for prompts.
 - **插件系统**学习 navdeep-G（Python entry_points 做规则自动发现，可扩展）
 - **LLM 后端**优先用本地已登录的 claude/codex CLI（免费），也支持 API key
 
+## LLM 规则灵敏度校准
+
+用两组真实提示词测试 LLM 规则（7 条）的检出情况。硬编码规则（max_lines、max_filesize 等）不计入。
+
+**测试条件**：claude 后端用 sonnet，codex 后端用默认模型，每个提示词同时跑两个后端。
+
+### Claude 官方 Superpowers Skills（高质量基准，14 个）
+
+| 提示词 | claude | codex | 总 LLM violations |
+|--------|--------|-------|--------------------|
+| brainstorming | 0 | 1 | 1 |
+| dispatching-parallel-agents | 0 | 1 | 1 |
+| executing-plans | 1 | 0 | 1 |
+| finishing-a-development-branch | 0 | 2 | 2 |
+| receiving-code-review | 0 | 1 | 1 |
+| requesting-code-review | 1 | 0 | 1 |
+| subagent-driven-development | 0 | 0 | 0 |
+| systematic-debugging | 2 | 0 | 2 |
+| test-driven-development | 0 | 1 | 1 |
+| using-git-worktrees | 0 | 0 | 0 |
+| using-superpowers | 1 | 1 | 2 |
+| verification-before-completion | 0 | 0 | 0 |
+| writing-plans | 0 | 2 | 2 |
+| writing-skills | 0 | 3 | 3 |
+| **平均 ± σ** | **0.36 ± 0.61** | **0.86 ± 0.91** | **1.21 ± 0.86** |
+
+### Auto-Claude-Code-Research-in-Sleep Skills（中等质量，16 个采样）
+
+| 提示词 | claude | codex | 总 LLM violations |
+|--------|--------|-------|--------------------|
+| idea-creator | 4 | 5 | 9 |
+| experiment-plan | 0 | 1 | 1 |
+| novelty-check | 0 | 0 | 0 |
+| auto-review-loop | 1 | 5 | 6 |
+| arxiv | 0 | 0 | 0 |
+| analyze-results | 1 | 0 | 1 |
+| auto-paper-improvement-loop | 0 | 2 | 2 |
+| auto-review-loop-llm | 1 | 2 | 3 |
+| formula-derivation | 0 | 0 | 0 |
+| paper-compile | 0 | 1 | 1 |
+| paper-poster | 2 | 8 | 10 |
+| paper-slides | 1 | 5 | 6 |
+| pixel-art | 1 | 1 | 2 |
+| research-refine-pipeline | 0 | 1 | 1 |
+| result-to-claim | 0 | 0 | 0 |
+| run-experiment | 0 | 0 | 0 |
+| **平均 ± σ** | **0.69 ± 1.04** | **1.94 ± 2.38** | **2.62 ± 3.20** |
+
+
 ## Repos to investigate
 
 | Repo | Type | Lang | ⭐ | Created | Commits (2w) | Active? | Notes |
