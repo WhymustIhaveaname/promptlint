@@ -109,7 +109,7 @@ class LLMRule(BaseRule):
         return _JUDGE_PROMPT_TEMPLATE.format(
             rule_md=self.rule_md,
             file_name=file_path.name,
-            content=content[:8000],
+            content=content,
         )
 
     def check_single_backend(self, content: str, file_path: Path, backend: str) -> list[Violation]:

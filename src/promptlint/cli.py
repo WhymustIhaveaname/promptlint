@@ -54,8 +54,13 @@ def scan(path: str, config_path: str | None):
     """Scan prompt files for violations."""
     scan_path = Path(path).resolve()
     cfg = Path(config_path) if config_path else None
-    results = run(scan_path, cfg)
-    code = _print_results(results, scan_path)
+
+    if scan_path.is_file():
+        results = run(scan_path.parent, cfg, files=[scan_path])
+    else:
+        results = run(scan_path, cfg)
+
+    code = _print_results(results, scan_path.parent if scan_path.is_file() else scan_path)
     sys.exit(code)
 
 
