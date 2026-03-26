@@ -35,10 +35,10 @@ This is the description.
 """)
         result = _parse_rule_md(md)
         assert result["rule_id"] == "my_rule"
-        assert "This is the description." in result["description"]
-        assert "❌ bad example" in result["examples"]
-        # Title line should be stripped from description
-        assert "Some title" not in result["description"]
+        # rule_md is the raw body after frontmatter, not parsed
+        assert "This is the description." in result["rule_md"]
+        assert "❌ bad example" in result["rule_md"]
+        assert "Some title" in result["rule_md"]
 
     def test_no_examples_section(self, tmp_path):
         md = _write_rule_md(tmp_path, """\
@@ -52,8 +52,7 @@ Just a description, no examples section.
 """)
         result = _parse_rule_md(md)
         assert result["rule_id"] == "no_examples"
-        assert result["examples"] == ""
-        assert "Just a description" in result["description"]
+        assert "Just a description" in result["rule_md"]
 
     def test_missing_frontmatter_raises(self, tmp_path):
         md = _write_rule_md(tmp_path, "# No frontmatter here\nJust text.")

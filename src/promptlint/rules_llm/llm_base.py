@@ -22,42 +22,40 @@ logger = logging.getLogger(__name__)
 LLM_RULES_DIR = Path(__file__).parent
 
 _JUDGE_PROMPT_TEMPLATE = """\
-You are a prompt quality linter. Your job is to check a prompt file against a specific rule.
+<role>
+You are an expert in LLM prompt engineering. Your task is to lint a prompt file against the rule defined below.
+</role>
 
-## Rule: {rule_id}
-{rule_description}
+<rule>
+{rule_md}
+</rule>
 
-## Examples of violations:
-{examples}
-
-## Prompt to check:
 <prompt file="{file_name}">
 {content}
 </prompt>
 
-## Instructions:
-Check if the prompt violates the rule above.
-Respond with a JSON array of violations. Each violation is an object with:
-- "message": brief description, under 50 chars (in Chinese)
-- "snippet": the relevant text (up to 60 chars)
-- "line": approximate line number (integer, or null)
+<output_format>
+Respond with a JSON array. Each element is a violation object. If no violations, return `[]`.
 
-Example response (violations found):
-[{{"message": "使用了模糊动词", "snippet": "handle edge cases", "line": 5}}]
-
-Example response (no violations):
+Pass example:
 []
 
-Only report clear violations. Ignore borderline or stylistic preferences unless they clearly match the rule.
+Fail example:
+[{{"message": "使用了模糊动词", "snippet": "handle edge cases", "line": 5}}]
 
-IMPORTANT: Respond ONLY with the JSON array. Keep messages SHORT."""
+Fields:
+- "message": brief description in Chinese, under 50 chars
+- "snippet": the offending text, up to 60 chars
+- "line": approximate line number (integer or null)
+
+Only report clear violations. Respond ONLY with the JSON array.
+</output_format>"""
 
 
 def _parse_rule_md(md_path: Path) -> dict[str, str]:
-    """Parse a rule .md file into {rule_id, description, examples}."""
+    """Parse a rule .md file. Returns {rule_id, rule_md (raw body)}."""
     text = md_path.read_text(encoding="utf-8")
 
-    # Split frontmatter from body
     match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", text, re.DOTALL)
     if not match:
         raise ValueError(f"Rule file {md_path} missing YAML frontmatter")
@@ -65,19 +63,7 @@ def _parse_rule_md(md_path: Path) -> dict[str, str]:
     meta = yaml.safe_load(match.group(1))
     body = match.group(2).strip()
 
-    rule_id = meta["rule_id"]
-
-    # Split body into description (before ## Examples) and examples (after)
-    parts = re.split(r"^## Examples?\s*$", body, maxsplit=1, flags=re.MULTILINE)
-    # Strip the leading "# rule_id — ..." title line from description
-    desc_text = parts[0].strip()
-    desc_lines = desc_text.splitlines()
-    if desc_lines and desc_lines[0].startswith("#"):
-        desc_text = "\n".join(desc_lines[1:]).strip()
-
-    examples = parts[1].strip() if len(parts) > 1 else ""
-
-    return {"rule_id": rule_id, "description": desc_text, "examples": examples}
+    return {"rule_id": meta["rule_id"], "rule_md": body}
 
 
 class LLMRule(BaseRule):
@@ -114,17 +100,14 @@ class LLMRule(BaseRule):
         if md_path is not None:
             parsed = _parse_rule_md(md_path)
             self.rule_id = parsed["rule_id"]
-            self.description = parsed["description"]
-            self.examples = parsed["examples"]
+            self.rule_md = parsed["rule_md"]
         else:
-            self.examples = getattr(self, "examples", "")
+            self.rule_md = getattr(self, "rule_md", "")
 
     def build_prompt(self, content: str, file_path: Path) -> str:
         """Build the judge prompt for this rule. Used by engine for parallel dispatch."""
         return _JUDGE_PROMPT_TEMPLATE.format(
-            rule_id=self.rule_id,
-            rule_description=self.description,
-            examples=self.examples,
+            rule_md=self.rule_md,
             file_name=file_path.name,
             content=content[:8000],
         )
