@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from promptlint.rules.base import BaseRule, RuleConfig, RuleContext, Violation
+from promptlint.rules_hardcode.base import BaseRule, RuleConfig, RuleContext, Violation
 
 # Common emphasis words that are often ALL-CAPS in prompts
 _CAPS_WORDS = {

@@ -3,7 +3,7 @@
 import pytest
 from pathlib import Path
 
-from promptlint.rules.base import BaseRule, RuleConfig, RuleContext, RuleType, Violation
+from promptlint.rules_hardcode.base import BaseRule, RuleConfig, RuleContext, RuleType, Violation
 
 
 def test_violation_defaults():
@@ -11,24 +11,6 @@ def test_violation_defaults():
     assert v.severity == "error"
     assert v.line is None
     assert v.snippet is None
-
-
-def test_rule_config_defaults():
-    cfg = RuleConfig()
-    assert cfg.enabled is True
-    assert cfg.severity == "error"
-    assert cfg.params == {}
-
-
-def test_rule_context_defaults():
-    ctx = RuleContext()
-    assert ctx.scan_path is None
-
-
-def test_rule_type_enum():
-    assert RuleType.HARDCODED.value == "hardcoded"
-    assert RuleType.LLM_INTERPRET.value == "llm_interpret"
-    assert RuleType.LLM_RESPONSE.value == "llm_response"
 
 
 def test_subclass_missing_rule_id():

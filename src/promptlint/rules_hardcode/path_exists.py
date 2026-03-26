@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from promptlint.rules.base import BaseRule, RuleConfig, RuleContext, Violation
+from promptlint.rules_hardcode.base import BaseRule, RuleContext, Violation
 
 # Match absolute paths like /home/user/foo.py, /etc/nginx/conf.d/
 # Require at least 3 segments to avoid matching lone /flags or /endpoints

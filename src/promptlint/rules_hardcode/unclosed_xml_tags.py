@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 from pathlib import Path
 
-from promptlint.rules.base import BaseRule, RuleConfig, RuleContext, Violation
+from promptlint.rules_hardcode.base import BaseRule, RuleContext, Violation
 
 # Match XML-style tags: <tag_name> or <tag_name attr="val">
 # Only match tags without spaces in the tag name (to skip placeholders like <arXiv ID>)
@@ -45,9 +46,7 @@ class UnclosedXmlTagsRule(BaseRule):
                 close_tags.append((m.group(1).lower(), i))
 
         # Count-based matching
-        close_count: dict[str, int] = {}
-        for tag, _ in close_tags:
-            close_count[tag] = close_count.get(tag, 0) + 1
+        close_count = Counter(tag for tag, _ in close_tags)
 
         violations: list[Violation] = []
         for tag, line in open_tags:

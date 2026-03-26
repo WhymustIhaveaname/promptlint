@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from promptlint.config import load_config, parse_rule_config, DEFAULT_PATTERNS
-from promptlint.rules.base import RuleConfig
+from promptlint.rules_hardcode.base import RuleConfig
 
 
 def test_load_missing_config():

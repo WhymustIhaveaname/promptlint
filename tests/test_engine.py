@@ -1,8 +1,11 @@
 """Integration tests for the rule engine."""
 
+import json
 from pathlib import Path
+from unittest.mock import patch
 
 from promptlint.engine import run, discover_rules, resolve_files
+from promptlint.llm import LLMResponse
 
 
 def test_discover_rules_finds_builtins():
@@ -77,3 +80,39 @@ def test_run_skips_unreadable_file(tmp_path):
     # Should not raise, just skip the file
     results = run(tmp_path, cfg)
     assert results == {}
+
+
+def test_run_disabled_rule_skipped(tmp_path):
+    """A rule with enabled: false in config should not run."""
+    prompt = tmp_path / "test-SKILL.md"
+    prompt.write_text("\n".join(f"line{i}" for i in range(200)))
+
+    cfg = tmp_path / "promptlint.yml"
+    cfg.write_text(
+        "files:\n  - '**/*-SKILL.md'\n"
+        "rules:\n  max_lines:\n    enabled: false\n    max: 10\n"
+    )
+
+    results = run(tmp_path, cfg)
+    assert results == {}
+
+
+def test_run_llm_rule_integration(tmp_path):
+    """LLM rules from .md files should be discovered and run by the engine."""
+    prompt = tmp_path / "test-SKILL.md"
+    prompt.write_text("Be helpful and accurate.")
+
+    cfg = tmp_path / "promptlint.yml"
+    cfg.write_text(
+        "files:\n  - '**/*-SKILL.md'\n"
+        "rules:\n  hollow_instructions:\n    severity: warn\n"
+    )
+
+    fake_response = json.dumps([{"message": "空洞指令", "snippet": "Be helpful", "line": 1}])
+    with patch("promptlint.rules_llm.llm_base.call_llm",
+               return_value=LLMResponse(text=fake_response, ok=True)):
+        results = run(tmp_path, cfg)
+
+    assert prompt in results
+    assert results[prompt][0].rule_id == "hollow_instructions"
+    assert results[prompt][0].severity == "warn"

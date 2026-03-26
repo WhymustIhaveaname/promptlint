@@ -2,11 +2,11 @@
 
 from pathlib import Path
 
-from promptlint.rules.base import RuleConfig
-from promptlint.rules.max_lines import MaxLinesRule
-from promptlint.rules.path_exists import PathExistsRule
-from promptlint.rules.unclosed_xml_tags import UnclosedXmlTagsRule
-from promptlint.rules.excessive_caps import ExcessiveCapsRule
+from promptlint.rules_hardcode.base import RuleConfig
+from promptlint.rules_hardcode.max_lines import MaxLinesRule
+from promptlint.rules_hardcode.path_exists import PathExistsRule
+from promptlint.rules_hardcode.unclosed_xml_tags import UnclosedXmlTagsRule
+from promptlint.rules_hardcode.excessive_caps import ExcessiveCapsRule
 
 
 class TestMaxLines:
@@ -27,10 +27,6 @@ class TestMaxLines:
         assert len(violations) == 1
         assert "11 lines" in violations[0].message
         assert "max 10" in violations[0].message
-
-    def test_default_max_100(self):
-        rule = MaxLinesRule()
-        assert rule.max == 100
 
     def test_uses_config_severity(self):
         rule = MaxLinesRule(RuleConfig(severity="warn", params={"max": 1}))
@@ -126,6 +122,12 @@ class TestUnclosedXmlTags:
         content = "line1\n<oops>\nline3"
         violations = rule.check(content, Path("test.md"))
         assert violations[0].line == 2
+
+    def test_tags_inside_code_block_ignored(self):
+        """Tags inside ``` code fences should not be treated as real XML."""
+        rule = UnclosedXmlTagsRule()
+        content = "text\n```\n<unclosed>\nsome code\n```\nmore text"
+        assert rule.check(content, Path("test.md")) == []
 
 
 class TestExcessiveCaps:

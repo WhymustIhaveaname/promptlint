@@ -1,4 +1,4 @@
-"""Rule engine: discovers rules via entry_points, runs them against files."""
+"""Rule engine: discovers rules via entry_points + rules_llm/*.md, runs them against files."""
 
 from __future__ import annotations
 
@@ -7,19 +7,15 @@ from importlib.metadata import entry_points
 from pathlib import Path
 
 from promptlint.config import load_config, parse_rule_config
-from promptlint.rules.base import BaseRule, RuleConfig, RuleContext, Violation
+from promptlint.rules_hardcode.base import BaseRule, RuleContext, Violation
+from promptlint.rules_llm.llm_base import LLMRule, discover_llm_rules
 
 logger = logging.getLogger(__name__)
 
 
 def discover_rules() -> dict[str, type[BaseRule]]:
-    """Find all registered rules via entry_points."""
-    rules: dict[str, type[BaseRule]] = {}
-    eps = entry_points(group="promptlint.rules")
-    for ep in eps:
-        cls = ep.load()
-        rules[ep.name] = cls
-    return rules
+    """Find all registered hardcoded rules via entry_points."""
+    return {ep.name: ep.load() for ep in entry_points(group="promptlint.rules")}
 
 
 def resolve_files(patterns: list[str], scan_path: Path) -> list[Path]:
@@ -37,19 +33,21 @@ def run(
 ) -> dict[Path, list[Violation]]:
     """Main entry: load config, discover rules, run against files."""
     config = load_config(config_path)
-    rule_classes = discover_rules()
     configured_rules = config["rules"]
 
-    # Only run rules that are explicitly listed in config.
-    # Third-party plugins discovered via entry_points but not in config are skipped.
+    # Collect enabled hardcoded + LLM rules
+    rule_classes = discover_rules()
+    llm_rule_paths = discover_llm_rules()
+
     active_rules: list[BaseRule] = []
-    for rule_name, rule_cls in rule_classes.items():
-        if rule_name not in configured_rules:
-            continue
-        rule_cfg = parse_rule_config(rule_name, configured_rules[rule_name])
+    for rule_id, raw_cfg in configured_rules.items():
+        rule_cfg = parse_rule_config(rule_id, raw_cfg)
         if not rule_cfg.enabled:
             continue
-        active_rules.append(rule_cls(rule_cfg))
+        if rule_id in rule_classes:
+            active_rules.append(rule_classes[rule_id](rule_cfg))
+        elif rule_id in llm_rule_paths:
+            active_rules.append(LLMRule(rule_cfg, md_path=llm_rule_paths[rule_id]))
 
     # Resolve files to scan
     if files is None:
@@ -57,7 +55,6 @@ def run(
 
     ctx = RuleContext(scan_path=scan_path)
 
-    # Run
     results: dict[Path, list[Violation]] = {}
     for file_path in files:
         try:

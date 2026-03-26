@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 
 from promptlint.engine import run
-from promptlint.rules.base import Violation
+from promptlint.rules_hardcode.base import Violation
 
 
 def _severity_icon(severity: str) -> str:
@@ -42,9 +42,8 @@ def _print_results(results: dict[Path, list[Violation]], base: Path) -> int:
 
 
 @click.group()
-def main():
+def main() -> None:
     """promptlint - Lint and test LLM prompts."""
-    pass
 
 
 @main.command()

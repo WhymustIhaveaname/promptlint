@@ -18,18 +18,12 @@ promptlint = "promptlint.cli:main"
 # 插件系统：内置规则通过 entry_points 注册，第三方插件也用同样机制
 [project.entry-points."promptlint.rules"]
 # Hardcoded rules
-max_lines = "promptlint.rules.max_lines:MaxLinesRule"
-path_exists = "promptlint.rules.path_exists:PathExistsRule"
-unclosed_xml_tags = "promptlint.rules.unclosed_xml_tags:UnclosedXmlTagsRule"
-excessive_caps = "promptlint.rules.excessive_caps:ExcessiveCapsRule"
-# LLM-interpreted rules
-suggestive_language = "promptlint.rules.suggestive_language:SuggestiveLanguageRule"
-hollow_instructions = "promptlint.rules.hollow_instructions:HollowInstructionsRule"
-vague_instructions = "promptlint.rules.vague_instructions:VagueInstructionsRule"
-contradictory_instructions = "promptlint.rules.contradictory_instructions:ContradictoryInstructionsRule"
-negative_only = "promptlint.rules.negative_only:NegativeOnlyRule"
-style_mismatch = "promptlint.rules.style_mismatch:StyleMismatchRule"
-over_engineering = "promptlint.rules.over_engineering:OverEngineeringRule"
+max_lines = "promptlint.rules_hardcode.max_lines:MaxLinesRule"
+path_exists = "promptlint.rules_hardcode.path_exists:PathExistsRule"
+unclosed_xml_tags = "promptlint.rules_hardcode.unclosed_xml_tags:UnclosedXmlTagsRule"
+excessive_caps = "promptlint.rules_hardcode.excessive_caps:ExcessiveCapsRule"
+# LLM-interpreted rules are loaded from src/promptlint/rules_llm/*.md
+# No entry_points needed — engine discovers them automatically
 
 [build-system]
 requires = ["uv_build>=0.10.12,<0.11.0"]

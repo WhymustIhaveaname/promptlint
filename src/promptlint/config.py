@@ -7,7 +7,7 @@ from typing import Any
 
 import yaml
 
-from promptlint.rules.base import RuleConfig
+from promptlint.rules_hardcode.base import RuleConfig
 
 DEFAULT_CONFIG_NAME = "promptlint.yml"
 
@@ -29,8 +29,7 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
     if not path.exists():
         return {"rules": {}, "files": DEFAULT_PATTERNS}
 
-    with open(path) as f:
-        raw = yaml.safe_load(f) or {}
+    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
     return {
         "rules": raw.get("rules", {}),

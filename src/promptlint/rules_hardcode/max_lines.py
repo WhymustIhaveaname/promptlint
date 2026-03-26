@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from promptlint.rules.base import BaseRule, RuleConfig, RuleContext, Violation
+from promptlint.rules_hardcode.base import BaseRule, RuleConfig, RuleContext, Violation
 
 
 class MaxLinesRule(BaseRule):
