@@ -56,14 +56,17 @@ class BaseRule(abc.ABC):
     description: str = ""
     rule_type: RuleType = RuleType.HARDCODED
 
+    # Set to True on intermediate base classes (like LLMRule) to skip validation
+    _skip_validation: bool = False
+
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
-        if not getattr(cls, '__abstractmethods__', None):
-            # Only validate concrete (non-abstract) subclasses
-            if not cls.rule_id:
-                raise TypeError(f"{cls.__name__} must set a non-empty 'rule_id'")
-            if not cls.description:
-                raise TypeError(f"{cls.__name__} must set a non-empty 'description'")
+        if getattr(cls, '__abstractmethods__', None) or cls._skip_validation:
+            return
+        if not cls.rule_id:
+            raise TypeError(f"{cls.__name__} must set a non-empty 'rule_id'")
+        if not cls.description:
+            raise TypeError(f"{cls.__name__} must set a non-empty 'description'")
 
     def __init__(self, config: RuleConfig | None = None):
         self.config = config or RuleConfig()

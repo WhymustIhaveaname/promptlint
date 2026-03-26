@@ -5,9 +5,39 @@ files:
   - "**/*_guide.md"
 
 rules:
+  # --- Hardcoded rules ---
   max_lines:
     severity: error
-    max: 500
+    max: 100
 
   path_exists:
+    severity: warn
+
+  unclosed_xml_tags:
+    severity: error
+
+  excessive_caps:
+    severity: warn
+    max_density: 0.03
+
+  # --- LLM-interpreted rules (require claude CLI) ---
+  suggestive_language:
+    severity: warn
+
+  hollow_instructions:
+    severity: warn
+
+  vague_instructions:
+    severity: warn
+
+  contradictory_instructions:
+    severity: error
+
+  negative_only:
+    severity: warn
+
+  style_mismatch:
+    severity: warn
+
+  over_engineering:
     severity: warn

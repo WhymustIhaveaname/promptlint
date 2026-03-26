@@ -1,0 +1,20 @@
+"""Rule: action prompts should use direct language, not suggestions."""
+
+from promptlint.rules.llm_base import LLMRule
+
+
+class SuggestiveLanguageRule(LLMRule):
+    rule_id = "suggestive_language"
+    description = (
+        "In prompts that instruct a model to perform actions, suggestive/tentative language "
+        "(e.g. 'Can you suggest...', 'Maybe you could...', 'Would it be possible to...') "
+        "should be replaced with direct action verbs. "
+        "Note: suggestive language in examples, quotes, or user-facing templates is OK."
+    )
+    examples = """\
+❌ "Can you suggest some changes to improve this function?"
+❌ "Maybe you could refactor the login module?"
+❌ "Would it be possible to add error handling?"
+✅ "Refactor the login module to use async/await."
+✅ "Add error handling for network timeouts in this function."
+"""

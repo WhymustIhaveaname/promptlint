@@ -13,7 +13,7 @@ class MaxLinesRule(BaseRule):
 
     def __init__(self, config: RuleConfig | None = None):
         super().__init__(config)
-        self.max = self.config.params.get("max", 500)
+        self.max = self.config.params.get("max", 100)
 
     def check(self, content: str, file_path: Path, ctx: RuleContext | None = None) -> list[Violation]:
         lines = content.splitlines()
