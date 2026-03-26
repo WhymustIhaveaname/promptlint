@@ -7,6 +7,7 @@ from promptlint.rules_hardcode.max_lines import MaxLinesRule
 from promptlint.rules_hardcode.path_exists import PathExistsRule
 from promptlint.rules_hardcode.unclosed_xml_tags import UnclosedXmlTagsRule
 from promptlint.rules_hardcode.excessive_caps import ExcessiveCapsRule
+from promptlint.rules_hardcode.max_filesize import MaxFilesizeRule
 
 
 class TestMaxLines:
@@ -160,3 +161,38 @@ class TestExcessiveCaps:
         rule = ExcessiveCapsRule(RuleConfig(params={"max_density": 0.5}))
         content = "MUST ALWAYS " + " ".join(["word"] * 30)
         assert rule.check(content, Path("test.md")) == []
+
+
+class TestMaxFilesize:
+    def test_under_limit(self):
+        rule = MaxFilesizeRule(RuleConfig(params={"max_bytes": 1024}))
+        content = "x" * 500
+        assert rule.check(content, Path("test.md")) == []
+
+    def test_over_limit(self):
+        rule = MaxFilesizeRule(RuleConfig(params={"max_bytes": 100}))
+        content = "x" * 200
+        violations = rule.check(content, Path("test.md"))
+        assert len(violations) == 1
+        assert "KB" in violations[0].message
+
+    def test_default_10kb(self):
+        rule = MaxFilesizeRule()
+        # 9 KB — should pass
+        assert rule.check("x" * 9000, Path("test.md")) == []
+        # 11 KB — should fail
+        violations = rule.check("x" * 11000, Path("test.md"))
+        assert len(violations) == 1
+
+    def test_uses_config_severity(self):
+        rule = MaxFilesizeRule(RuleConfig(severity="warn", params={"max_bytes": 10}))
+        violations = rule.check("x" * 100, Path("test.md"))
+        assert violations[0].severity == "warn"
+
+    def test_multibyte_chars_counted_correctly(self):
+        """中文字符占 3 bytes each in UTF-8."""
+        rule = MaxFilesizeRule(RuleConfig(params={"max_bytes": 100}))
+        # 50 Chinese chars = 150 bytes > 100
+        content = "中" * 50
+        violations = rule.check(content, Path("test.md"))
+        assert len(violations) == 1

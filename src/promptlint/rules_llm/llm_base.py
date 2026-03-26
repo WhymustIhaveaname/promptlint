@@ -41,7 +41,13 @@ Respond with a JSON array of violations. Each violation is an object with:
 - "snippet": the relevant text (up to 60 chars)
 - "line": approximate line number (integer, or null)
 
-If there are NO violations, respond with an empty array: []
+Example response (violations found):
+[{{"message": "使用了模糊动词", "snippet": "handle edge cases", "line": 5}}]
+
+Example response (no violations):
+[]
+
+Only report clear violations. Ignore borderline or stylistic preferences unless they clearly match the rule.
 
 IMPORTANT: Respond ONLY with the JSON array. Keep messages SHORT."""
 

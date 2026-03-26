@@ -22,6 +22,7 @@ max_lines = "promptlint.rules_hardcode.max_lines:MaxLinesRule"
 path_exists = "promptlint.rules_hardcode.path_exists:PathExistsRule"
 unclosed_xml_tags = "promptlint.rules_hardcode.unclosed_xml_tags:UnclosedXmlTagsRule"
 excessive_caps = "promptlint.rules_hardcode.excessive_caps:ExcessiveCapsRule"
+max_filesize = "promptlint.rules_hardcode.max_filesize:MaxFilesizeRule"
 # LLM-interpreted rules are loaded from src/promptlint/rules_llm/*.md
 # No entry_points needed — engine discovers them automatically
 

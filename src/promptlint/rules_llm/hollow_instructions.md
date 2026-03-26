@@ -10,11 +10,16 @@ Test: "Would removing this line cause the model to make mistakes?" If no, it's h
 
 ## Examples
 
+### Violations (❌)
+
 ❌ "Be helpful and accurate"
 ❌ "Write clean, maintainable code"
 ❌ "Think carefully before responding"
 ❌ "Provide high-quality answers"
 ❌ "Be concise and clear"
-✅ "Use snake_case for variables, camelCase for functions" (specific constraint)
-✅ "Keep functions under 20 lines" (measurable limit)
-✅ "Respond in Chinese" (non-default behavior)
+
+### Acceptable (✅)
+
+✅ "Use snake_case for variables, camelCase for functions" — specific constraint
+✅ "Keep functions under 20 lines" — measurable limit
+✅ "Respond in Chinese" — non-default behavior

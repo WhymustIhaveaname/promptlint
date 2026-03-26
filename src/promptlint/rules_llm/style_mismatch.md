@@ -8,7 +8,14 @@ The prompt's own writing style influences the model's output style. If the promp
 
 ## Examples
 
+### Violations (❌)
+
 ❌ Prompt written in heavy markdown (headers, lists, bold), but expects plain text conversation output
 ❌ Prompt written in formal academic English, but expects casual Chinese chat
 ❌ Prompt written in English, but expects Chinese output without explicitly saying so
-✅ Prompt style and language match the expected output
+
+### Acceptable (✅)
+
+✅ Prompt written in casual Chinese markdown, expects Chinese markdown response
+✅ Prompt uses JSON schema with comments, expects structured JSON output
+✅ Prompt written in plain English prose, expects English prose reply
