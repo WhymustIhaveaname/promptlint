@@ -28,6 +28,7 @@ class Violation:
     severity: str = "error"  # error | warn | info
     line: int | None = None
     snippet: str | None = None
+    source: str | None = None  # LLM backend that produced this: "claude" | "codex"
 
 
 @dataclass

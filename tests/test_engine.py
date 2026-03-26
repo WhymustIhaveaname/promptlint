@@ -116,3 +116,4 @@ def test_run_llm_rule_integration(tmp_path):
     assert prompt in results
     assert results[prompt][0].rule_id == "hollow_instructions"
     assert results[prompt][0].severity == "warn"
+    assert results[prompt][0].source is not None

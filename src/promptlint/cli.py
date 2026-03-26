@@ -26,7 +26,8 @@ def _print_results(results: dict[Path, list[Violation]], base: Path) -> int:
         for v in violations:
             icon = _severity_icon(v.severity)
             loc = f"L{v.line}" if v.line else ""
-            click.echo(f"  {icon} [{v.severity}] {v.rule_id}: {v.message} {loc}")
+            src = f" ({v.source})" if v.source else ""
+            click.echo(f"  {icon} [{v.severity}] {v.rule_id}: {v.message} {loc}{src}")
             if v.snippet:
                 click.echo(f"    > {v.snippet[:120]}")
             total += 1

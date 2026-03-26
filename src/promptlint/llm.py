@@ -11,6 +11,7 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 _TIMEOUT = 120
+_KNOWN_BACKENDS = ("claude", "codex")
 
 
 @dataclass
@@ -88,3 +89,22 @@ def call_llm(prompt: str, backend: str = "auto", model: str | None = None) -> LL
     if backend == "codex":
         return call_codex(prompt, model=model or "gpt-5.4")
     return LLMResponse(text="", ok=False, error=f"Unknown backend: {backend}")
+
+
+def resolve_backends(backends: list[str]) -> list[str]:
+    """Resolve backend list. 'auto' expands to all available CLIs in PATH."""
+    resolved: list[str] = []
+    for b in backends:
+        if b == "auto":
+            for name in _KNOWN_BACKENDS:
+                if shutil.which(name):
+                    resolved.append(name)
+        elif b in _KNOWN_BACKENDS:
+            resolved.append(b)
+        else:
+            logger.warning("Unknown LLM backend: %s (ignored)", b)
+    # Deduplicate while preserving order
+    seen: set[str] = set()
+    return [b for b in resolved if not (b in seen or seen.add(b))]  # type: ignore[func-returns-value]
+
+

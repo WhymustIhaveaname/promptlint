@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from importlib.metadata import entry_points
 from pathlib import Path
 
@@ -26,6 +27,42 @@ def resolve_files(patterns: list[str], scan_path: Path) -> list[Path]:
     return sorted(files)
 
 
+def _run_llm_rules_parallel(
+    llm_rules: list[LLMRule],
+    content: str,
+    file_path: Path,
+) -> list[Violation]:
+    """Run all LLM (rule × backend) combinations in one thread pool."""
+    # Build flat task list: [(rule, backend), ...]
+    tasks: list[tuple[LLMRule, str]] = []
+    for rule in llm_rules:
+        for backend in rule.backends:
+            tasks.append((rule, backend))
+
+    if not tasks:
+        return []
+
+    # Single task — no need for a thread pool
+    if len(tasks) == 1:
+        rule, backend = tasks[0]
+        return rule.check_single_backend(content, file_path, backend)
+
+    violations: list[Violation] = []
+    with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+        futures = {
+            executor.submit(rule.check_single_backend, content, file_path, backend): (rule, backend)
+            for rule, backend in tasks
+        }
+        for future in as_completed(futures):
+            rule, backend = futures[future]
+            try:
+                violations.extend(future.result())
+            except Exception as e:
+                logger.warning("LLM rule %s [%s] raised: %s", rule.rule_id, backend, e)
+
+    return violations
+
+
 def run(
     scan_path: Path,
     config_path: Path | None = None,
@@ -34,20 +71,22 @@ def run(
     """Main entry: load config, discover rules, run against files."""
     config = load_config(config_path)
     configured_rules = config["rules"]
+    llm_config = config["llm"]
 
     # Collect enabled hardcoded + LLM rules
     rule_classes = discover_rules()
     llm_rule_paths = discover_llm_rules()
 
-    active_rules: list[BaseRule] = []
+    hardcoded_rules: list[BaseRule] = []
+    llm_rules: list[LLMRule] = []
     for rule_id, raw_cfg in configured_rules.items():
         rule_cfg = parse_rule_config(rule_id, raw_cfg)
         if not rule_cfg.enabled:
             continue
         if rule_id in rule_classes:
-            active_rules.append(rule_classes[rule_id](rule_cfg))
+            hardcoded_rules.append(rule_classes[rule_id](rule_cfg))
         elif rule_id in llm_rule_paths:
-            active_rules.append(LLMRule(rule_cfg, md_path=llm_rule_paths[rule_id]))
+            llm_rules.append(LLMRule(rule_cfg, md_path=llm_rule_paths[rule_id], llm_config=llm_config))
 
     # Resolve files to scan
     if files is None:
@@ -64,8 +103,14 @@ def run(
             continue
 
         file_violations: list[Violation] = []
-        for rule in active_rules:
+
+        # Hardcoded rules: fast, run serially
+        for rule in hardcoded_rules:
             file_violations.extend(rule.check(content, file_path, ctx))
+
+        # LLM rules: all (rule × backend) pairs in one thread pool
+        file_violations.extend(_run_llm_rules_parallel(llm_rules, content, file_path))
+
         if file_violations:
             results[file_path] = file_violations
 

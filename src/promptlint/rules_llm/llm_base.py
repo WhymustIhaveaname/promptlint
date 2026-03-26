@@ -13,7 +13,8 @@ from pathlib import Path
 
 import yaml
 
-from promptlint.llm import call_llm
+from promptlint.config import LLMConfig
+from promptlint.llm import call_llm, resolve_backends
 from promptlint.rules_hardcode.base import BaseRule, RuleConfig, RuleContext, RuleType, Violation
 
 logger = logging.getLogger(__name__)
@@ -85,10 +86,30 @@ class LLMRule(BaseRule):
     _skip_validation = True
     rule_type = RuleType.LLM_INTERPRET
 
-    def __init__(self, config: RuleConfig | None = None, *, md_path: Path | None = None):
+    def __init__(
+        self,
+        config: RuleConfig | None = None,
+        *,
+        md_path: Path | None = None,
+        llm_config: LLMConfig | None = None,
+    ):
         super().__init__(config)
-        self.model = self.config.params.get("model")
-        self.backend = self.config.params.get("backend", "auto")
+        llm_config = llm_config or LLMConfig()
+
+        # Rule-level 'backends' override global; fall back to global llm config
+        rule_backends = self.config.params.get("backends")
+        if rule_backends:
+            self.backends = resolve_backends(rule_backends)
+        else:
+            self.backends = resolve_backends(llm_config.backends)
+
+        # Merge models: global defaults, rule-level overrides on top
+        self.models: dict[str, str] = {**llm_config.models}
+        rule_model = self.config.params.get("model")
+        if rule_model:
+            # Single model applies to all backends for this rule
+            for b in self.backends:
+                self.models[b] = rule_model
 
         if md_path is not None:
             parsed = _parse_rule_md(md_path)
@@ -98,8 +119,9 @@ class LLMRule(BaseRule):
         else:
             self.examples = getattr(self, "examples", "")
 
-    def check(self, content: str, file_path: Path, ctx: RuleContext | None = None) -> list[Violation]:
-        prompt = _JUDGE_PROMPT_TEMPLATE.format(
+    def build_prompt(self, content: str, file_path: Path) -> str:
+        """Build the judge prompt for this rule. Used by engine for parallel dispatch."""
+        return _JUDGE_PROMPT_TEMPLATE.format(
             rule_id=self.rule_id,
             rule_description=self.description,
             examples=self.examples,
@@ -107,12 +129,25 @@ class LLMRule(BaseRule):
             content=content[:8000],
         )
 
-        resp = call_llm(prompt, backend=self.backend, model=self.model)
+    def check_single_backend(self, content: str, file_path: Path, backend: str) -> list[Violation]:
+        """Run this rule against one backend. Returns violations tagged with source."""
+        prompt = self.build_prompt(content, file_path)
+        model = self.models.get(backend)
+        resp = call_llm(prompt, backend=backend, model=model)
         if not resp.ok:
-            logger.warning("LLM rule %s failed: %s", self.rule_id, resp.error)
+            logger.warning("LLM rule %s [%s] failed: %s", self.rule_id, backend, resp.error)
             return []
+        violations = self._parse_response(resp.text)
+        for v in violations:
+            v.source = backend
+        return violations
 
-        return self._parse_response(resp.text)
+    def check(self, content: str, file_path: Path, ctx: RuleContext | None = None) -> list[Violation]:
+        """Run this rule against all backends sequentially. For parallel use, see engine."""
+        all_violations: list[Violation] = []
+        for backend in self.backends:
+            all_violations.extend(self.check_single_backend(content, file_path, backend))
+        return all_violations
 
     def _parse_response(self, text: str) -> list[Violation]:
         """Parse LLM JSON response into Violation objects."""

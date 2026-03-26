@@ -4,6 +4,14 @@ files:
   - "**/*SKILL.md"
   - "**/*_guide.md"
 
+# LLM backend settings
+# backends: which CLIs to use. "auto" = detect all available, use all in parallel.
+#   Examples: [auto], [claude], [codex], [claude, codex]
+# models: optional per-backend model override. Omit to use CLI defaults.
+#   Example: { claude: haiku, codex: o3 }
+llm:
+  backends: [auto]
+
 rules:
   # --- Hardcoded rules ---
   max_lines:
@@ -24,7 +32,7 @@ rules:
     severity: warn
     max_density: 0.03
 
-  # --- LLM-interpreted rules (require claude CLI) ---
+  # --- LLM-interpreted rules (require claude/codex CLI) ---
   suggestive_language:
     severity: warn
 

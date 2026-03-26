@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from promptlint.config import load_config, parse_rule_config, DEFAULT_PATTERNS
+from promptlint.config import load_config, parse_rule_config, LLMConfig, DEFAULT_PATTERNS
 from promptlint.rules_hardcode.base import RuleConfig
 
 
@@ -11,6 +11,8 @@ def test_load_missing_config():
     result = load_config(Path("/nonexistent/promptlint.yml"))
     assert result["rules"] == {}
     assert result["files"] == DEFAULT_PATTERNS
+    assert isinstance(result["llm"], LLMConfig)
+    assert result["llm"].backends == ["auto"]
 
 
 def test_load_valid_config(tmp_path):
@@ -45,3 +47,23 @@ def test_parse_rule_config_defaults():
     assert cfg.enabled is True
     assert cfg.severity == "error"
     assert cfg.params == {}
+
+
+def test_load_llm_config(tmp_path):
+    cfg = tmp_path / "promptlint.yml"
+    cfg.write_text(
+        "llm:\n  backends: [claude, codex]\n  models:\n    claude: haiku\n    codex: o3\n"
+        "rules:\n  max_lines:\n    severity: error\n"
+    )
+    result = load_config(cfg)
+    assert result["llm"].backends == ["claude", "codex"]
+    assert result["llm"].models == {"claude": "haiku", "codex": "o3"}
+
+
+def test_load_llm_config_defaults(tmp_path):
+    """No llm key in config -> defaults."""
+    cfg = tmp_path / "promptlint.yml"
+    cfg.write_text("rules:\n  max_lines:\n    severity: error\n")
+    result = load_config(cfg)
+    assert result["llm"].backends == ["auto"]
+    assert result["llm"].models == {}
