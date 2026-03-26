@@ -2,6 +2,89 @@
 
 Lint and test LLM prompts — like pylint + pytest, but for prompts.
 
+## 安装
+
+```bash
+# uv
+uv pip install git+ssh://git@github.com/WhymustIhaveaname/promptlint.git
+
+# pip
+pip install git+ssh://git@github.com/WhymustIhaveaname/promptlint.git
+```
+
+## 用法
+
+```bash
+# 扫描当前目录
+promptlint scan
+
+# 扫描指定目录或文件
+promptlint scan path/to/prompts/
+promptlint scan my-skill.prompt.md
+
+# 指定配置文件
+promptlint scan -c promptlint.yml path/to/prompts/
+
+# 生成默认配置文件
+promptlint init
+```
+
+## 配置文件
+
+在目标仓库根目录创建 `promptlint.yml`（或用 `promptlint init` 生成模板）。示例：
+
+```yaml
+files:
+  - "agents/**/*.md"
+
+rules:
+  max_lines:
+    severity: warn
+    max: 300
+  suggestive_language:
+    enabled: false
+```
+
+完整的可配置项参考 `promptlint init` 生成的模板。不创建配置文件也能运行，会用默认值扫描。
+
+## 配置 pre-commit
+
+在目标仓库的 `.pre-commit-config.yaml` 中添加：
+
+```yaml
+repos:
+  - repo: git@github.com:WhymustIhaveaname/promptlint.git
+    rev: main  # 建议固定到具体 commit hash 或 tag
+    hooks:
+      - id: promptlint
+```
+
+默认会对所有 markdown 和 text 文件运行。如果只想检查特定文件，可以用 `files` 过滤：
+
+```yaml
+repos:
+  - repo: git@github.com:WhymustIhaveaname/promptlint.git
+    rev: main
+    hooks:
+      - id: promptlint
+        files: '(SKILL\.md|\.prompt(\.md)?$)'
+```
+
+如果目标仓库里有自定义的 `promptlint.yml` 配置文件，通过 `args` 传入：
+
+```yaml
+      - id: promptlint
+        args: ['-c', 'promptlint.yml']
+```
+
+安装并运行：
+
+```bash
+pre-commit install          # 注册到 git hooks
+pre-commit run promptlint   # 手动运行一次
+pre-commit run --all-files  # 对所有文件运行
+```
+
 ## 项目愿景
 
 三种规则类型：

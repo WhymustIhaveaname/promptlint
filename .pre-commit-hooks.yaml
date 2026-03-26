@@ -1,0 +1,7 @@
+- id: promptlint
+  name: promptlint
+  description: Lint LLM prompt files for best practices
+  entry: promptlint scan
+  language: python
+  types_or: [markdown, text]
+  require_serial: true
