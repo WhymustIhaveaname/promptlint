@@ -114,7 +114,7 @@ pre-commit run --all-files  # 对所有文件运行
 | executing-plans | 1 | 0 | 1 |
 | finishing-a-development-branch | 0 | 2 | 2 |
 | receiving-code-review | 0 | 1 | 1 |
-| requesting-code-review | 1 | 0 | 1 |
+| requesting-code-review | 1 | 1 | 2 |
 | subagent-driven-development | 0 | 0 | 0 |
 | systematic-debugging | 2 | 0 | 2 |
 | test-driven-development | 0 | 1 | 1 |
@@ -123,7 +123,7 @@ pre-commit run --all-files  # 对所有文件运行
 | verification-before-completion | 0 | 0 | 0 |
 | writing-plans | 0 | 2 | 2 |
 | writing-skills | 0 | 3 | 3 |
-| **平均 ± σ** | **0.36 ± 0.61** | **0.86 ± 0.91** | **1.21 ± 0.86** |
+| **平均 ± σ** | **0.36 ± 0.61** | **0.93 ± 0.87** | **1.29 ± 0.87** |
 
 ### Auto-Claude-Code-Research-in-Sleep Skills（中等质量，16 个采样）
 
