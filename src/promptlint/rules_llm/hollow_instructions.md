@@ -6,6 +6,8 @@ rule_id: hollow_instructions
 
 Detect standalone, top-level instructions that are pure platitudes — they describe default LLM behavior and removing them would change nothing. Only flag the most egregious cases: generic adjective-stacking with zero specificity.
 
+Core test: for every line in the prompt, ask yourself: **"Would removing it cause the model to make mistakes?"** If not, it's noise — flag it.
+
 Do NOT flag:
 - Instructions that reinforce a point within a larger workflow or checklist context
 - Instructions that, while brief, are paired with specific details nearby

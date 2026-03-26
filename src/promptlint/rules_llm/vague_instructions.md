@@ -6,6 +6,8 @@ rule_id: vague_instructions
 
 Detect instructions where the ENTIRE task description is so vague that the model cannot act on it at all. Only flag top-level task instructions that are fundamentally ambiguous — a competent colleague would not know what to do.
 
+Anthropic's golden rule: show the prompt to a colleague unfamiliar with the task — if they'd be confused, the model will be too.
+
 Do NOT flag:
 - Short imperative sub-steps within a larger workflow (e.g., "Fix now", "Extract helpers") — these are clear enough in context
 - Instructions that are elaborated or clarified by surrounding context in the same prompt

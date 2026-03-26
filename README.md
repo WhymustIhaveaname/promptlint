@@ -143,9 +143,9 @@ pre-commit run --all-files  # 对所有文件运行
 | paper-slides | 1 | 5 | 6 |
 | pixel-art | 1 | 1 | 2 |
 | research-refine-pipeline | 0 | 1 | 1 |
-| result-to-claim | 0 | 0 | 0 |
+| result-to-claim | 1 | 0 | 1 |
 | run-experiment | 0 | 0 | 0 |
-| **平均 ± σ** | **0.69 ± 1.04** | **1.94 ± 2.38** | **2.62 ± 3.20** |
+| **平均 ± σ** | **0.75 ± 1.06** | **1.94 ± 2.38** | **2.69 ± 3.20** |
 
 
 ## Repos to investigate
