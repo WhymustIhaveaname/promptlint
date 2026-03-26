@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node (promptfoo trial)
+node_modules/
+
+# Secrets
+.env
+
+# Build
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# Trial repos (调研用，不纳入版本控制)
+alexmavr-promptsage/
+korchasa-promptlint/
+prompt-lint/
+youcommit-promptlint/
+
+# promptfoo trial configs
+promptfooconfig.*.yaml
+generated_tests.yaml
+results.json
+test_cases.csv

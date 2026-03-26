@@ -1,0 +1,27 @@
+# promptfoo 规则检查：skill prompt 质量
+# echo provider 直接返回 prompt 文本，不调用 LLM
+
+prompts:
+  - file://Docs/arxiv_guide.md
+  - file://Docs/arxiv-SKILL.md
+
+providers:
+  - id: echo
+
+tests:
+  - description: "skill 不超过 500 行"
+    assert:
+      - type: javascript
+        value: "output.split('\\n').length <= 500"
+
+  - description: "所有引用的路径都存在"
+    assert:
+      - type: javascript
+        value: |
+          const fs = require('fs');
+          const paths = output.match(/\/[\w./:-]+/g) || [];
+          // 只检查看起来像绝对路径的（至少两层目录）
+          const absPaths = [...new Set(paths.filter(p => p.split('/').length >= 3))];
+          const missing = absPaths.filter(p => !fs.existsSync(p));
+          if (missing.length === 0) return true;
+          return `路径不存在: ${missing.join(', ')}`;

@@ -1,0 +1,25 @@
+[project]
+name = "promptlint"
+version = "0.1.0"
+description = "Lint and test LLM prompts — like pylint + pytest, but for prompts"
+readme = "README.md"
+authors = [
+    { name = "cctaiwan", email = "syouran0508@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "pyyaml>=6.0",
+    "click>=8.0",
+]
+
+[project.scripts]
+promptlint = "promptlint.cli:main"
+
+# 插件系统：内置规则通过 entry_points 注册，第三方插件也用同样机制
+[project.entry-points."promptlint.rules"]
+max_lines = "promptlint.rules.max_lines:MaxLinesRule"
+path_exists = "promptlint.rules.path_exists:PathExistsRule"
+
+[build-system]
+requires = ["uv_build>=0.10.12,<0.11.0"]
+build-backend = "uv_build"

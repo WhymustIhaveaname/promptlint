@@ -1,0 +1,13 @@
+# promptlint config
+
+files:
+  - "**/*SKILL.md"
+  - "**/*_guide.md"
+
+rules:
+  max_lines:
+    severity: error
+    max: 500
+
+  path_exists:
+    severity: warn

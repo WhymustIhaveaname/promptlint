@@ -2,7 +2,19 @@
 
 Lint and test LLM prompts — like pylint + pytest, but for prompts.
 
-Goal: integrate existing open-source tools first, extend with custom rules later.
+## 项目愿景
+
+三种规则类型：
+
+1. **硬编码规则** — 不依赖 LLM，纯本地检查（正则、行数、路径存在性等）
+2. **LLM 解释型规则** — 类似 korchasa：把规则 + prompt 发给 LLM，LLM 判断是否违规（best practice 检查）
+3. **LLM 响应型规则** — 类似 promptfoo：把 prompt 像生产环境那样发给 LLM，检查响应质量
+
+设计原则：
+
+- **配置文件**学习 promptfoo（YAML 定义规则和断言）
+- **插件系统**学习 navdeep-G（Python entry_points 做规则自动发现，可扩展）
+- **LLM 后端**优先用本地已登录的 claude/codex CLI（免费），也支持 API key
 
 ## Repos to investigate
 
