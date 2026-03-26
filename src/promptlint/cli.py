@@ -61,11 +61,12 @@ def scan(path: str, config_path: str | None):
 
 @main.command()
 @click.option("--output", "-o", default="promptlint.yml", help="Output path")
-def init(output: str):
+@click.option("--force", is_flag=True, help="Overwrite existing config file")
+def init(output: str, force: bool):
     """Create a starter config file."""
     out = Path(output)
-    if out.exists():
-        click.echo(f"{out} already exists. Use --force or delete it first.")
+    if out.exists() and not force:
+        click.echo(f"{out} already exists. Use --force to overwrite.")
         return
 
     out.write_text(

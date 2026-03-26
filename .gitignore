@@ -17,14 +17,18 @@ dist/
 .vscode/
 .idea/
 
-# Trial repos (调研用，不纳入版本控制)
-alexmavr-promptsage/
-korchasa-promptlint/
-prompt-lint/
-youcommit-promptlint/
+# 调研仓库
+vendor/
+
+# 外部测试文件
+Docs/
 
 # promptfoo trial configs
-promptfooconfig.*.yaml
+promptfooconfig*.yaml
 generated_tests.yaml
 results.json
 test_cases.csv
+
+# Node lockfiles (trial)
+package.json
+package-lock.json

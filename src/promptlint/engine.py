@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-import sys
+import logging
 from importlib.metadata import entry_points
 from pathlib import Path
 
 from promptlint.config import load_config, parse_rule_config
-from promptlint.rules.base import BaseRule, RuleConfig, Violation
+from promptlint.rules.base import BaseRule, RuleConfig, RuleContext, Violation
+
+logger = logging.getLogger(__name__)
 
 
 def discover_rules() -> dict[str, type[BaseRule]]:
@@ -36,12 +38,15 @@ def run(
     """Main entry: load config, discover rules, run against files."""
     config = load_config(config_path)
     rule_classes = discover_rules()
+    configured_rules = config["rules"]
 
-    # Instantiate rules with config
+    # Only run rules that are explicitly listed in config.
+    # Third-party plugins discovered via entry_points but not in config are skipped.
     active_rules: list[BaseRule] = []
     for rule_name, rule_cls in rule_classes.items():
-        rule_cfg_raw = config["rules"].get(rule_name, {})
-        rule_cfg = parse_rule_config(rule_name, rule_cfg_raw) if rule_cfg_raw else RuleConfig()
+        if rule_name not in configured_rules:
+            continue
+        rule_cfg = parse_rule_config(rule_name, configured_rules[rule_name])
         if not rule_cfg.enabled:
             continue
         active_rules.append(rule_cls(rule_cfg))
@@ -50,13 +55,20 @@ def run(
     if files is None:
         files = resolve_files(config["files"], scan_path)
 
+    ctx = RuleContext(scan_path=scan_path)
+
     # Run
     results: dict[Path, list[Violation]] = {}
     for file_path in files:
-        content = file_path.read_text(encoding="utf-8")
+        try:
+            content = file_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            logger.warning("Skipping %s: %s", file_path, e)
+            continue
+
         file_violations: list[Violation] = []
         for rule in active_rules:
-            file_violations.extend(rule.check(content, file_path))
+            file_violations.extend(rule.check(content, file_path, ctx))
         if file_violations:
             results[file_path] = file_violations
 

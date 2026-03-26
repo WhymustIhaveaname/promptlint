@@ -4,20 +4,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from promptlint.rules.base import BaseRule, RuleConfig, Violation
+from promptlint.rules.base import BaseRule, RuleConfig, RuleContext, Violation
 
 
 class MaxLinesRule(BaseRule):
     rule_id = "max_lines"
     description = "Prompt file must not exceed maximum line count"
-    rule_type = "hardcoded"
 
     def __init__(self, config: RuleConfig | None = None):
         super().__init__(config)
         self.max = self.config.params.get("max", 500)
 
-    def check(self, content: str, file_path: Path) -> list[Violation]:
-        lines = content.split("\n")
+    def check(self, content: str, file_path: Path, ctx: RuleContext | None = None) -> list[Violation]:
+        lines = content.splitlines()
         count = len(lines)
         if count > self.max:
             return [Violation(

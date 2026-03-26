@@ -5,11 +5,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from promptlint.rules.base import BaseRule, RuleConfig, Violation
+from promptlint.rules.base import BaseRule, RuleConfig, RuleContext, Violation
 
 # Match absolute paths like /home/user/foo.py, /etc/nginx/conf.d/
 # Require at least 3 segments to avoid matching lone /flags or /endpoints
-_PATH_RE = re.compile(r"(\/[\w.+-]+(?:\/[\w.+-]+){2,})")
+_PATH_RE = re.compile(r"(\/[\w.+\-]+(?:\/[\w.+\-]+){2,})")
 # Detect URLs in a line to skip their path components
 _URL_RE = re.compile(r"https?://\S+")
 
@@ -17,9 +17,7 @@ _URL_RE = re.compile(r"https?://\S+")
 class PathExistsRule(BaseRule):
     rule_id = "path_exists"
     description = "All referenced absolute file paths must exist"
-    rule_type = "hardcoded"
-
-    def check(self, content: str, file_path: Path) -> list[Violation]:
+    def check(self, content: str, file_path: Path, ctx: RuleContext | None = None) -> list[Violation]:
         violations: list[Violation] = []
         seen: set[str] = set()
 

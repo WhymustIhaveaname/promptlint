@@ -10,8 +10,15 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import Any
+
+
+class RuleType(Enum):
+    HARDCODED = "hardcoded"
+    LLM_INTERPRET = "llm_interpret"
+    LLM_RESPONSE = "llm_response"
 
 
 @dataclass
@@ -31,18 +38,37 @@ class RuleConfig:
     params: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass
+class RuleContext:
+    """Extra context passed to rules during check.
+
+    Hardcoded rules can ignore this. LLM rules will use `llm_client` etc.
+    """
+    scan_path: Path | None = None
+    # Future: llm_client, environment, user metadata, etc.
+
+
 class BaseRule(abc.ABC):
     """All rules (hardcoded, llm-interpreted, llm-response) inherit from this."""
 
     # Subclass must set these
     rule_id: str = ""
     description: str = ""
-    rule_type: str = "hardcoded"  # hardcoded | llm_interpret | llm_response
+    rule_type: RuleType = RuleType.HARDCODED
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        if not getattr(cls, '__abstractmethods__', None):
+            # Only validate concrete (non-abstract) subclasses
+            if not cls.rule_id:
+                raise TypeError(f"{cls.__name__} must set a non-empty 'rule_id'")
+            if not cls.description:
+                raise TypeError(f"{cls.__name__} must set a non-empty 'description'")
 
     def __init__(self, config: RuleConfig | None = None):
         self.config = config or RuleConfig()
 
     @abc.abstractmethod
-    def check(self, content: str, file_path: Path) -> list[Violation]:
+    def check(self, content: str, file_path: Path, ctx: RuleContext | None = None) -> list[Violation]:
         """Run this rule against file content. Return list of violations."""
         ...
